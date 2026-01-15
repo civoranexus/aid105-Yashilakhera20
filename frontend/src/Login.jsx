@@ -1,16 +1,19 @@
 import { useState } from "react";
 
-export default function Login({ setToken, setRole }) {
+function Login({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleLogin = async () => {
-    const formData = new URLSearchParams();
-    formData.append("username", username);
-    formData.append("password", password);
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
 
     try {
+      const formData = new URLSearchParams();
+      formData.append("username", username);
+      formData.append("password", password);
+
       const response = await fetch("http://127.0.0.1:8000/login", {
         method: "POST",
         headers: {
@@ -20,37 +23,40 @@ export default function Login({ setToken, setRole }) {
       });
 
       if (!response.ok) {
-        throw new Error("Invalid credentials");
+        throw new Error("Login failed");
       }
 
       const data = await response.json();
-      setToken(data.access_token);
-      setRole(data.role);
+      onLogin(data);
     } catch (err) {
       setError("Login failed. Check username or password.");
     }
   };
 
   return (
-    <div style={{ padding: "40px", fontFamily: "Arial" }}>
-      <h2>SchemeAssist AI – Login</h2>
+    <div style={{ padding: "40px" }}>
+      <h2>Login</h2>
 
-      <input
-        placeholder="Username"
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <br /><br />
-
-      <input
-        type="password"
-        placeholder="Password"
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <br /><br />
-
-      <button onClick={handleLogin}>Login</button>
+      <form onSubmit={handleLogin}>
+        <input
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <br /><br />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <br /><br />
+        <button type="submit">Login</button>
+      </form>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
     </div>
   );
 }
+
+export default Login;
