@@ -1,33 +1,17 @@
-import { useState } from "react";
-import Login from "./Login";
-import "./index.css";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Landing from "./pages/Landing";
+import UserType from "./pages/UserType";
+import Login from "./pages/Login";
+import "./App.css";
 
 function App() {
-  const [showLogin, setShowLogin] = useState(false);
-
-  if (showLogin) {
-    return <Login />;
-  }
-
   return (
-    <div className="landing-container">
-      <div className="landing-card">
-        <div className="logo-circle">GY</div>
-
-        <h1 className="app-title">Gov-Yojnaarthi</h1>
-
-        <p className="tagline">
-          Your Digital Companion for Government Schemes
-        </p>
-
-        <button
-          className="start-btn"
-          onClick={() => setShowLogin(true)}
-        >
-          Get Started
-        </button>
-      </div>
-    </div>
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/user-type" element={<UserType />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
   );
 }
 
