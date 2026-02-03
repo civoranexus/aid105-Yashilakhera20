@@ -1,15 +1,14 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-from jose import jwt, JWTError
-from datetime import datetime, timedelta
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from sqlalchemy import Column, Integer, String, create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, Session
+from typing import List, Optional
 
-# -------------------------
-# APP SETUP
-# -------------------------
-app = FastAPI(title="Gov-Yojnaarthi Backend")
+# ---------------- APP ----------------
+app = FastAPI(title="Gov-Yojnaarthi API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,89 +18,63 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# -------------------------
-# AUTH CONFIG
-# -------------------------
-SECRET_KEY = "secret123"   # for demo (change in production)
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+# ---------------- DATABASE ----------------
+DATABASE_URL = "sqlite:///./govyojnaarthi.db"
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(bind=engine)
+Base = declarative_base()
 
-# -------------------------
-# DUMMY USERS (FOR NOW)
-# -------------------------
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    first_name = Column(String)
+    middle_name = Column(String, nullable=True)
+    last_name = Column(String)
+    mobile = Column(String)
+    alternate_mobile = Column(String, nullable=True)
+    email = Column(String, unique=True)
+    dob = Column(String)
+    nationality = Column(String)
+    state = Column(String)
+    city = Column(String)
+    area_type = Column(String)
+    locality = Column(String)
+    aadhaar = Column(String)
+
+Base.metadata.create_all(bind=engine)
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# ---------------- AUTH ----------------
 fake_users_db = {
-    
-    "citizen1": {
-        "username": "citizen1",
-        "password": "citizen123",
-        "role": "citizen",
-    },
-    "admin1": {
-        "username": "admin1",
-        "password": "admin123",
-        "role": "admin",
-    },
+    "citizen1": {"password": "citizen123", "role": "citizen"},
+    "admin1": {"password": "admin123", "role": "admin"}
 }
 
-registered_users = []
+class LoginResponse(BaseModel):
+    message: str
+    role: str
 
-# -------------------------
-# HELPER FUNCTIONS
-# -------------------------
-def authenticate_user(username: str, password: str):
-    user = fake_users_db.get(username)
-    if not user:
-        return None
-    if user["password"] != password:
-        return None
-    return user
-
-
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (
-        expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    )
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-
-def get_current_user(token: str = Depends(oauth2_scheme)):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-# -------------------------
-# ROUTES
-# -------------------------
-
-@app.get("/")
-def root():
-    return {"message": "Gov-Yojnaarthi backend running successfully"}
-
-
-@app.post("/login")
+@app.post("/login", response_model=LoginResponse)
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = authenticate_user(form_data.username, form_data.password)
-    if not user:
+    user = fake_users_db.get(form_data.username)
+    if not user or user["password"] != form_data.password:
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    return {"message": "Login successful", "role": user["role"]}
 
-    token = create_access_token(
-        {"username": user["username"], "role": user["role"]}
-    )
-    from pydantic import BaseModel, EmailStr
-
+# ---------------- SIGNUP ----------------
 class SignupRequest(BaseModel):
     firstName: str
-    middleName: str | None = None
+    middleName: Optional[str] = None
     lastName: str
-    phone: str
-    altPhone: str | None = None
+    mobile: str
+    alternateMobile: Optional[str] = None
     email: EmailStr
     dob: str
     nationality: str
@@ -112,30 +85,86 @@ class SignupRequest(BaseModel):
     aadhaar: str
 
 @app.post("/signup")
-def signup(user: SignupRequest):
-    # Nationality rule
-    if user.nationality.lower() != "india":
+def signup(user: SignupRequest, db: Session = Depends(get_db)):
+    if user.nationality != "India":
         raise HTTPException(status_code=403, detail="Only Indian citizens allowed")
 
-    # Aadhaar validation (12 digits)
     if not user.aadhaar.isdigit() or len(user.aadhaar) != 12:
         raise HTTPException(status_code=400, detail="Invalid Aadhaar number")
 
-    registered_users.append(user.dict())
+    if db.query(User).filter(User.email == user.email).first():
+        raise HTTPException(status_code=409, detail="User already exists")
 
-    return {"message": "Signup successful"}
+    new_user = User(
+        first_name=user.firstName,
+        middle_name=user.middleName,
+        last_name=user.lastName,
+        mobile=user.mobile,
+        alternate_mobile=user.alternateMobile,
+        email=user.email,
+        dob=user.dob,
+        nationality=user.nationality,
+        state=user.state,
+        city=user.city,
+        area_type=user.areaType,
+        locality=user.locality,
+        aadhaar=user.aadhaar
+    )
 
+    db.add(new_user)
+    db.commit()
+    return {"message": "Registration successful"}
 
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "role": user["role"],
-    }
+# ---------------- SCHEME RECOMMENDATION ----------------
+class EligibilityRequest(BaseModel):
+    age: int
+    income: int
+    category: str
+    gender: str
+    state: str
 
+class Scheme(BaseModel):
+    name: str
+    description: str
+    eligibility: str
 
-@app.get("/dashboard")
-def dashboard(current_user: dict = Depends(get_current_user)):
-    return {
-        "message": "Welcome to Gov-Yojnaarthi Dashboard",
-        "user": current_user,
-    }
+@app.post("/recommend", response_model=List[Scheme])
+def recommend(data: EligibilityRequest):
+    schemes = []
+
+    if data.age >= 60:
+        schemes.append(Scheme(
+            name="Senior Citizen Pension Scheme",
+            description="Monthly pension for senior citizens",
+            eligibility="Age 60+"
+        ))
+
+    if data.income <= 250000:
+        schemes.append(Scheme(
+            name="PM Jan Dhan Yojana",
+            description="Zero balance banking scheme",
+            eligibility="Income below ₹2.5L"
+        ))
+
+    if data.category.lower() in ["sc", "st"]:
+        schemes.append(Scheme(
+            name="Post Matric Scholarship",
+            description="Scholarship for SC/ST students",
+            eligibility="SC/ST category"
+        ))
+
+    if data.gender.lower() == "female":
+        schemes.append(Scheme(
+            name="Sukanya Samriddhi Yojana",
+            description="Savings scheme for girl child",
+            eligibility="Female applicants"
+        ))
+
+    if not schemes:
+        schemes.append(Scheme(
+            name="No Matching Scheme",
+            description="No scheme found for given profile",
+            eligibility="—"
+        ))
+
+    return schemes
