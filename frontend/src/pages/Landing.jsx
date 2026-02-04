@@ -1,25 +1,18 @@
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-function Landing() {
+export default function Landing() {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      navigate("/user-type");
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [navigate]);
-
   return (
-    <section className="page fade-in">
-      <h2>Welcome to Gov-Yojnaarthi</h2>
-      <p>
-        One platform to discover, verify and access government welfare schemes.
-      </p>
-    </section>
+    <div className="center-page">
+      <div className="card">
+        <div className="logo-circle">GY</div>
+        <h2>Gov-Yojnaarthi</h2>
+        <p>Your Digital Companion for Government Schemes</p>
+        <button onClick={() => navigate("/user-type")}>
+          Get Started
+        </button>
+      </div>
+    </div>
   );
 }
-
-export default Landing;

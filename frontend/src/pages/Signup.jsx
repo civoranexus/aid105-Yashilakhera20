@@ -1,106 +1,94 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../App.css";
 
-function Signup() {
+export default function Signup() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
-    firstName: "",
-    middleName: "",
-    lastName: "",
+    first_name: "",
+    middle_name: "",
+    last_name: "",
     mobile: "",
-    alternateMobile: "",
+    alternate_mobile: "",
     email: "",
     dob: "",
-    nationality: "",
+    nationality: "India",
+    aadhaar: "",
     state: "",
     city: "",
-    areaType: "",
-    locality: "",
-    aadhaar: ""
+    area_type: "",
   });
 
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
+    setError("");
 
     try {
       const res = await fetch("http://127.0.0.1:8000/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
 
-      if (res.ok) {
-        setSuccess(true);
-      } else {
-        const data = await res.json();
-        setError(data.detail || "Registration failed");
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.detail || "Registration failed");
       }
+
+      alert("Registration successful. Please login.");
+      navigate("/login");
+
     } catch (err) {
-      setError("Server not reachable. Please try again.");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ SUCCESS SCREEN
-  if (success) {
-    return (
-      <div className="success-container">
-        <h2>🎉 Registration Successful</h2>
-        <p>Your details have been submitted successfully.</p>
-        <p>You can now proceed to login.</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="signup-container">
-      <form className="signup-card" onSubmit={handleSubmit}>
-        <h2>New User Registration</h2>
+    <div className="center-page">
+      <div className="card">
+        <h2>Create New Account</h2>
 
-        <input name="firstName" placeholder="First Name *" required onChange={handleChange} />
-        <input name="middleName" placeholder="Middle Name (optional)" onChange={handleChange} />
-        <input name="lastName" placeholder="Last Name *" required onChange={handleChange} />
-        <input name="mobile" placeholder="Mobile Number *" required onChange={handleChange} />
-        <input name="alternateMobile" placeholder="Alternate Number (optional)" onChange={handleChange} />
-        <input type="email" name="email" placeholder="Email *" required onChange={handleChange} />
-        <input type="date" name="dob" required onChange={handleChange} />
+        <form onSubmit={handleSignup}>
+          <input name="first_name" placeholder="First Name *" required onChange={handleChange} />
+          <input name="middle_name" placeholder="Middle Name (Optional)" onChange={handleChange} />
+          <input name="last_name" placeholder="Last Name *" required onChange={handleChange} />
 
-        <select name="nationality" required onChange={handleChange}>
-          <option value="">Select Nationality *</option>
-          <option value="India">India</option>
-          <option value="Other">Other</option>
-        </select>
+          <input name="mobile" placeholder="Mobile Number *" required onChange={handleChange} />
+          <input name="alternate_mobile" placeholder="Alternate Mobile (Optional)" onChange={handleChange} />
 
-        <input name="state" placeholder="State *" required onChange={handleChange} />
-        <input name="city" placeholder="City *" required onChange={handleChange} />
+          <input type="email" name="email" placeholder="Email *" required onChange={handleChange} />
+          <input type="date" name="dob" required onChange={handleChange} />
 
-        <select name="areaType" required onChange={handleChange}>
-          <option value="">Urban / Rural *</option>
-          <option value="Urban">Urban</option>
-          <option value="Rural">Rural</option>
-        </select>
+          <input name="aadhaar" placeholder="Aadhaar Number (12 digits) *" required onChange={handleChange} />
 
-        <input name="locality" placeholder="Locality / Village *" required onChange={handleChange} />
-        <input name="aadhaar" placeholder="Aadhaar Number *" required onChange={handleChange} />
+          <input name="state" placeholder="State *" required onChange={handleChange} />
+          <input name="city" placeholder="City *" required onChange={handleChange} />
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Registering..." : "Register"}
-        </button>
+          <select name="area_type" required onChange={handleChange}>
+            <option value="">Select Area Type *</option>
+            <option value="Urban">Urban</option>
+            <option value="Rural">Rural</option>
+          </select>
+
+          <button type="submit" disabled={loading}>
+            {loading ? "Registering..." : "Register"}
+          </button>
+        </form>
 
         {error && <p className="error-text">{error}</p>}
-      </form>
+      </div>
     </div>
   );
 }
-
-export default Signup;

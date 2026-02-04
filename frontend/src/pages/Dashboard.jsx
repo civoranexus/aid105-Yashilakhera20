@@ -1,120 +1,154 @@
 import { useState } from "react";
+import "../App.css";
 
-function Dashboard() {
-  const [form, setForm] = useState({
-    gender: "",
+export default function Dashboard() {
+  const [formData, setFormData] = useState({
     age: "",
+    gender: "",
+    annual_income: "",
     category: "",
     state: "",
     city: "",
-    income: ""
+    area_type: "",
   });
 
-  const [schemes, setSchemes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState(null);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const checkEligibility = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
+    setResult(null);
 
-    const res = await fetch("http://127.0.0.1:8000/recommend", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        age: Number(form.age),
-        income: Number(form.income),
-        category: form.category,
-        gender: form.gender,
-        state: form.state
-      })
-    });
+    try {
+      const res = await fetch("http://127.0.0.1:8000/check-eligibility", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          age: Number(formData.age),
+          gender: formData.gender,
+          annual_income: Number(formData.annual_income),
+          category: formData.category,
+          state: formData.state,
+          city: formData.city,
+          area_type: formData.area_type,
+        }),
+      });
 
-    const data = await res.json();
-    setSchemes(data);
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.detail || "Eligibility could not be determined");
+      }
+
+      setResult(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <section className="page slide-up">
-      <h2>Check Your Eligibility</h2>
-      <p className="subtitle">
-        Fill the details below to find suitable government schemes
-      </p>
+    <div className="center-page">
+      <div className="card wide">
+        <h2>Check Your Eligibility</h2>
+        <p className="info-text">
+          Eligibility is calculated based on the details you provide.
+        </p>
 
-      <form onSubmit={handleSubmit} className="form">
-        {/* Gender */}
-        <select name="gender" required onChange={handleChange}>
-          <option value="">Select Gender</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Other</option>
-        </select>
+        <form onSubmit={checkEligibility}>
+          <input
+            type="number"
+            name="age"
+            placeholder="Age *"
+            required
+            onChange={handleChange}
+          />
 
-        {/* Age */}
-        <input
-          type="number"
-          name="age"
-          placeholder="Age"
-          required
-          onChange={handleChange}
-        />
+          <select name="gender" required onChange={handleChange}>
+            <option value="">Select Gender *</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
 
-        {/* Category */}
-        <select name="category" required onChange={handleChange}>
-          <option value="">Select Category</option>
-          <option value="General">General</option>
-          <option value="OBC">OBC</option>
-          <option value="SC">SC</option>
-          <option value="ST">ST</option>
-        </select>
+          <input
+            type="number"
+            name="annual_income"
+            placeholder="Annual Income (₹) *"
+            required
+            onChange={handleChange}
+          />
 
-        {/* State */}
-        <input
-          type="text"
-          name="state"
-          placeholder="State"
-          required
-          onChange={handleChange}
-        />
+          <select name="category" required onChange={handleChange}>
+            <option value="">Select Category *</option>
+            <option value="General">General</option>
+            <option value="OBC">OBC</option>
+            <option value="SC">SC</option>
+            <option value="ST">ST</option>
+            <option value="Minority">Minority</option>
+          </select>
 
-        {/* City */}
-        <input
-          type="text"
-          name="city"
-          placeholder="City"
-          required
-          onChange={handleChange}
-        />
+          <input
+            name="state"
+            placeholder="State *"
+            required
+            onChange={handleChange}
+          />
 
-        {/* Income */}
-        <input
-          type="number"
-          name="income"
-          placeholder="Annual Income ( Rupees INR )"
-          required
-          onChange={handleChange}
-        />
+          <input
+            name="city"
+            placeholder="City *"
+            required
+            onChange={handleChange}
+          />
 
-        <button type="submit">Check Schemes</button>
-      </form>
+          <select name="area_type" required onChange={handleChange}>
+            <option value="">Area Type *</option>
+            <option value="Urban">Urban</option>
+            <option value="Rural">Rural</option>
+          </select>
 
-      {/* Result */}
-      {schemes.length > 0 && (
-        <div className="results">
-          <h3>Eligible Schemes</h3>
+          <button
+            type="submit"
+            className="check-eligibility-btn"
+            disabled={loading}
+          >
+            {loading ? "Checking eligibility..." : "Check Eligibility"}
+          </button>
+        </form>
 
-          {schemes.map((s, i) => (
-            <div key={i} className="scheme-card">
-              <strong>{s.name}</strong>
-              <p>{s.description}</p>
-              <small>Eligibility: {s.eligibility}</small>
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
+        {/* ERROR */}
+        {error && <p className="error-text">{error}</p>}
+
+        {/* RESULT */}
+        {result && (
+          <div className="results">
+            <h3>Eligible Schemes</h3>
+
+            {result.count === 0 ? (
+              <p className="info-text">
+                No schemes found based on the provided information.
+              </p>
+            ) : (
+              <ul>
+                {result.eligible_schemes.map((scheme, index) => (
+                  <li key={index} className="scheme-card">
+                    {scheme}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
-
-export default Dashboard;
