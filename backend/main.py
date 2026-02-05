@@ -1,58 +1,48 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, Literal
-from datetime import date
+from pydantic import BaseModel, EmailStr
+import uuid
 
-app = FastAPI(title="Gov-Yojnaarthi API")
+app = FastAPI()
 
-# -------------------- CORS --------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # later restrict in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# -------------------- SCHEMAS --------------------
+# ---------------- MODELS ----------------
 
 class SignupRequest(BaseModel):
-    first_name: str = Field(..., min_length=2)
-    middle_name: Optional[str] = None
-    last_name: str = Field(..., min_length=2)
-
-    mobile: str = Field(..., min_length=10, max_length=10)
-    alternate_mobile: Optional[str] = None
-
+    first_name: str
+    last_name: str
+    mobile: str
     email: EmailStr
-    dob: date
-
+    dob: str
     nationality: str
-    aadhaar: Optional[str] = None
-
     state: str
     city: str
+    aadhaar: str | None = None
+    area_type: str
 
-    area_type: Literal["Urban", "Rural"]
-    locality: str
-
+class CreateAccountRequest(BaseModel):
+    username: str
+    password: str
 
 class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str = Field(..., min_length=6)
+    username: str
+    password: str
 
 
-class EligibilityRequest(BaseModel):
-    age: int = Field(..., ge=0, le=120)
-    gender: Literal["Male", "Female", "Other"]
-    category: Literal["General", "OBC", "SC", "ST"]
-    annual_income: int = Field(..., ge=0)
-    state: str
-    urban_rural: Literal["Urban", "Rural"]
+# ---------------- TEMP DATABASE ----------------
+
+users = {}
+accounts = {}
 
 
-# -------------------- ROUTES --------------------
+# ---------------- ROUTES ----------------
 
 @app.get("/")
 def root():
@@ -61,54 +51,41 @@ def root():
 
 @app.post("/signup")
 def signup(data: SignupRequest):
-    # Aadhaar rule
-    if data.nationality.lower() == "india" and not data.aadhaar:
-        raise HTTPException(
-            status_code=400,
-            detail="Aadhaar number is required for Indian citizens"
-        )
+    user_id = str(uuid.uuid4())
 
-    if data.nationality.lower() != "india":
-        raise HTTPException(
-            status_code=403,
-            detail="Currently this service is only available for Indian citizens"
-        )
+    users[user_id] = data.dict()
 
     return {
-        "status": "success",
-        "message": "User registered successfully"
+        "message": "Registration successful",
+        "user_id": user_id
+    }
+
+
+@app.post("/create-account")
+def create_account(data: CreateAccountRequest):
+    if len(data.password) < 6:
+        raise HTTPException(status_code=400, detail="Password too short")
+
+    if data.username in accounts:
+        raise HTTPException(status_code=400, detail="Username already exists")
+
+    accounts[data.username] = data.password
+
+    return {
+        "message": "Account created successfully",
+        "username": data.username
     }
 
 
 @app.post("/login")
 def login(data: LoginRequest):
-    # Dummy login (replace with DB later)
-    if data.email and data.password:
-        return {
-            "status": "success",
-            "token": "dummy-jwt-token"
-        }
+    if data.username not in accounts:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    raise HTTPException(status_code=401, detail="Invalid credentials")
-
-
-@app.post("/eligibility")
-def check_eligibility(data: EligibilityRequest):
-    schemes = []
-
-    if data.annual_income <= 250000:
-        schemes.append("PM Jan Dhan Yojana")
-
-    if data.gender == "Female":
-        schemes.append("Beti Bachao Beti Padhao")
-
-    if data.category in ["SC", "ST"]:
-        schemes.append("Scholarship Scheme for SC/ST")
-
-    if data.age >= 60:
-        schemes.append("Senior Citizen Pension Scheme")
+    if accounts[data.username] != data.password:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
     return {
-        "eligible": True if schemes else False,
-        "schemes": schemes
+        "message": "Login successful",
+        "username": data.username
     }

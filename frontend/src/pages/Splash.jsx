@@ -5,12 +5,11 @@ export default function Splash() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setTimeout(() => navigate("/landing"), 3000);
+    setTimeout(() => navigate("/user-type"), 3000);
   }, []);
 
   return (
-    <div className="splash">
-      <div className="logo-circle">GY</div>
+    <div className="center-screen">
       <h1>Gov-Yojnaarthi</h1>
       <p>Your Digital Companion for Government Schemes</p>
     </div>

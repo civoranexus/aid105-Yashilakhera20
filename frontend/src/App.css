@@ -1,188 +1,35 @@
-/* ===== RESET ===== */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Segoe UI", Roboto, Arial, sans-serif;
-}
-
 body {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #0f4c81, #1c6ed5);
-  color: #1a1a1a;
-}
-
-/* ===== CENTER PAGE LAYOUT ===== */
-.center-page {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
-/* ===== CARD ===== */
-.card {
-  background: #ffffff;
-  width: 100%;
-  max-width: 520px;
-  padding: 36px;
-  border-radius: 18px;
-  text-align: center;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-}
-
-/* ===== TITLES ===== */
-.card h1,
-.card h2 {
-  color: #0f4c81;
-  margin-bottom: 12px;
-}
-
-.card p {
-  color: #555;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-/* ===== HOME PAGE ===== */
-.home-container {
-  min-height: 100vh;
-  padding: 40px;
-  color: #ffffff;
-}
-
-/* ===== INPUTS ===== */
-input,
-select {
-  width: 100%;
-  padding: 10px 12px;
-  margin-top: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-/* ===== BUTTON ===== */
-button {
-  width: 100%;
-  padding: 12px;
-  margin-top: 16px;
-  border: none;
-  border-radius: 10px;
-  background: #1c6ed5;
-  color: #ffffff;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-/* ===== FLOATING CHECK ELIGIBILITY BUTTON (HIGHLIGHTED) ===== */
-.check-eligibility-btn {
-  position: fixed !important;
-  right: 28px;
-  bottom: 28px;
-
-  background: #1c6ed5;
-  color: #ffffff;
-
-  border: none;
-  border-radius: 14px;
-  padding: 14px 26px;
-
-  font-size: 16px;
-  font-weight: 600;
-
-  cursor: pointer;
-
-  /* 🔵 STRONG VISIBLE GLOW */
-  box-shadow:
-    0 0 0 8px rgba(28, 110, 213, 0.25),
-    0 0 30px rgba(28, 110, 213, 0.6),
-    0 16px 40px rgba(0, 0, 0, 0.35);
-
-  z-index: 9999;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.check-eligibility-btn:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 0 0 10px rgba(28, 110, 213, 0.35),
-    0 0 40px rgba(28, 110, 213, 0.8),
-    0 20px 50px rgba(0, 0, 0, 0.45);
-}
-
-/* ===== HEADER ===== */
-.app-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 60px;
-
-  background: #ffffff;
-  border-bottom: 1px solid #dee2e6;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 0 20px;
-  z-index: 1000;
-}
-
-.app-title {
-  font-weight: 600;
-  color: #0f4c81;
-  font-size: 18px;
-}
-
-/* ===== LOGOUT BUTTON ===== */
-.logout-btn {
-  background: transparent;
-  border: 1.5px solid #dc3545;
-  color: #dc3545;
-
-  padding: 6px 14px;        /* 👈 controls button size */
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-
-  cursor: pointer;
-
-  width: auto;              /* 👈 IMPORTANT */
-  min-width: unset;         /* 👈 IMPORTANT */
-  white-space: nowrap;      /* 👈 keeps text tight */
-}
-
-.logout-btn:hover {
-  background: #dc3545;
-  color: #ffffff;
-}
-
-/* Push content below header */
-.home-container {
-  padding-top: 100px;
-}
-
-.check-eligibility-btn {
-  background: #1976d2;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(#0f4ea1, #1976d2);
   color: white;
-  padding: 12px 22px;
-  border-radius: 8px;
+}
+
+.center-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+input, select, button {
+  padding: 10px;
+  width: 260px;
+  border-radius: 6px;
   border: none;
-  font-weight: 600;
+}
+
+button {
+  background: #ffcc00;
+  font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 0 0 rgba(25,118,210,0);
-  transition: box-shadow 0.3s ease;
 }
 
-.check-eligibility-btn:hover {
-  box-shadow: 0 0 18px rgba(25,118,210,0.6);
-}
-
-.loading-text {
-  margin-top: 8px;
-  font-size: 14px;
-  color: #555;
+.floating-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  box-shadow: 0 0 20px rgba(255,204,0,0.8);
 }

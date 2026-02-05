@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function Login() {
+export default function CreateAccount() {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = async () => {
+  const handleCreateAccount = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/login", {
+      const res = await fetch("http://127.0.0.1:8000/create-account", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password })
@@ -17,12 +17,12 @@ export default function Login() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.detail || "Invalid credentials");
+        alert(data.detail || "Account creation failed");
         return;
       }
 
-      localStorage.setItem("loggedIn", "true");
-      navigate("/home");
+      alert("Account created successfully");
+      navigate("/login");
 
     } catch {
       alert("Server not reachable");
@@ -31,20 +31,22 @@ export default function Login() {
 
   return (
     <div className="page">
-      <h2>Login</h2>
+      <h2>Create Account</h2>
 
       <input
         placeholder="Username"
+        value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
 
       <input
         type="password"
         placeholder="Password"
+        value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
 
-      <button onClick={handleLogin}>Login</button>
+      <button onClick={handleCreateAccount}>Create Account</button>
     </div>
   );
 }

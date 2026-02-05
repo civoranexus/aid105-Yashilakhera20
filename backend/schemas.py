@@ -1,28 +1,23 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
+from datetime import date
 
-# ---------- SIGNUP ----------
 class SignupRequest(BaseModel):
-    first_name: str
+    first_name: str = Field(..., min_length=1)
     middle_name: Optional[str] = None
-    last_name: str
-    mobile: str
+    last_name: str = Field(..., min_length=1)
+
+    mobile: str = Field(..., min_length=10, max_length=10)
     alternate_mobile: Optional[str] = None
+
     email: EmailStr
-    dob: str
+    dob: date
+
     nationality: str
     state: str
     city: str
     area_type: str  # Urban / Rural
-    locality: str
+
     aadhaar: Optional[str] = None
-
-
-# ---------- ELIGIBILITY ----------
-class EligibilityRequest(BaseModel):
-    age: int
-    gender: str
-    category: str
-    annual_income: int
-    state: str
-    city: str
+    username: str
+    password: str
