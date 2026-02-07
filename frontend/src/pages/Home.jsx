@@ -1,10 +1,24 @@
-export default function Home() {
-  return (
-    <div className="page">
-      <h1>Government Schemes & Benefits</h1>
-      <p>Check your eligibility and discover schemes tailored for you.</p>
+import { useNavigate } from "react-router-dom";
 
-      <button>Check Eligibility</button>
+<button
+  className="logout-btn"
+  onClick={() => {
+    localStorage.removeItem("user");
+    window.location.href = "/";
+  }}
+>
+  Logout
+</button>
+
+export default function Home() {
+  const nav = useNavigate();
+  return (
+    <div className="container">
+      <div className="card">
+        <h2>Government Schemes & Benefits</h2>
+        <p>Check your eligibility in one click.</p>
+        <button onClick={() => nav("/dashboard")}>Check Eligibility</button>
+      </div>
     </div>
   );
 }

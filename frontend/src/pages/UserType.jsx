@@ -1,13 +1,14 @@
 import { useNavigate } from "react-router-dom";
 
 export default function UserType() {
-  const navigate = useNavigate();
-
+  const nav = useNavigate();
   return (
-    <div className="center-screen">
-      <h2>Choose Your Journey</h2>
-      <button onClick={() => navigate("/login")}>Existing User</button>
-      <button onClick={() => navigate("/signup")}>New User</button>
+    <div className="container">
+      <div className="card">
+        <h2>Choose Your Journey</h2>
+        <button onClick={() => nav("/login")}>Existing User</button>
+        <button onClick={() => nav("/signup")}>New User</button>
+      </div>
     </div>
   );
 }

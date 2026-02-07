@@ -1,42 +1,25 @@
-import { useState } from "react";
+import { Routes, Route } from "react-router-dom";
 
-export default function Dashboard() {
-  const [data, setData] = useState({});
-  const [schemes, setSchemes] = useState([]);
+import Splash from "./pages/Splash";
+import UserType from "./pages/UserType";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import CreateAccount from "./pages/CreateAccount";
+import Home from "./pages/Home";
+import Dashboard from "./pages/Dashboard";
+import Results from "./pages/Results";
 
-  const update = e => setData({ ...data, [e.target.name]: e.target.value });
-
-  const submit = async () => {
-    const res = await fetch("http://127.0.0.1:8000/eligibility", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    const json = await res.json();
-    setSchemes(json.schemes || []);
-  };
-
+export default function App() {
   return (
-    <div className="center-screen">
-      <h2>Check Eligibility</h2>
-      <input name="age" placeholder="Age" onChange={update} />
-      <select name="gender" onChange={update}>
-        <option>Male</option>
-        <option>Female</option>
-        <option>Other</option>
-      </select>
-      <select name="category" onChange={update}>
-        <option>General</option>
-        <option>OBC</option>
-        <option>SC</option>
-        <option>ST</option>
-      </select>
-      <input name="annual_income" placeholder="Annual Income" onChange={update} />
-      <input name="state" placeholder="State" onChange={update} />
-      <input name="city" placeholder="City" onChange={update} />
-      <button onClick={submit}>Submit</button>
-
-      {schemes.map(s => <p key={s}>{s}</p>)}
-    </div>
+    <Routes>
+      <Route path="/" element={<Splash />} />
+      <Route path="/user-type" element={<UserType />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/create-account" element={<CreateAccount />} />
+      <Route path="/home" element={<Home />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/results" element={<Results />} />
+    </Routes>
   );
 }

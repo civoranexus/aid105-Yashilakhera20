@@ -1,70 +1,37 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 export default function Signup() {
-  const navigate = useNavigate();
+  const nav = useNavigate();
+  const [form, setForm] = useState({});
 
-  const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
-    mobile: "",
-    email: "",
-    dob: "",
-    nationality: "",
-    state: "",
-    city: "",
-    aadhaar: "",
-    area_type: ""
-  });
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleRegister = async () => {
-    try {
-      const res = await fetch("http://127.0.0.1:8000/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.detail || "Registration failed");
-        return;
-      }
-
-      alert("Registration successful");
-      localStorage.setItem("user_id", data.user_id);
-      navigate("/create-account");
-
-    } catch {
-      alert("Server not reachable");
-    }
+  const submit = async () => {
+    const res = await fetch("http://127.0.0.1:8000/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    const data = await res.json();
+    alert(`Registered! Your ID: ${data.userId}`);
+    nav("/create-account");
   };
 
   return (
-    <div className="page">
-      <h2>New User Registration</h2>
-
-      <input name="first_name" placeholder="First Name" onChange={handleChange} />
-      <input name="last_name" placeholder="Last Name" onChange={handleChange} />
-      <input name="mobile" placeholder="Mobile" onChange={handleChange} />
-      <input name="email" placeholder="Email" onChange={handleChange} />
-      <input type="date" name="dob" onChange={handleChange} />
-      <input name="nationality" placeholder="Nationality" onChange={handleChange} />
-      <input name="state" placeholder="State" onChange={handleChange} />
-      <input name="city" placeholder="City" onChange={handleChange} />
-      <input name="aadhaar" placeholder="Aadhaar" onChange={handleChange} />
-      <select name="area_type" onChange={handleChange}>
-        <option value="">Area Type</option>
-        <option value="Urban">Urban</option>
-        <option value="Rural">Rural</option>
-      </select>
-
-      <button onClick={handleRegister}>Register</button>
+    <div className="container">
+      <div className="card">
+        <h2>New User Registration</h2>
+        <input placeholder="First Name" onChange={e=>setForm({...form, firstName:e.target.value})}/>
+        <input placeholder="Last Name" onChange={e=>setForm({...form, lastName:e.target.value})}/>
+        <input placeholder="Mobile" onChange={e=>setForm({...form, mobile:e.target.value})}/>
+        <input placeholder="Email" onChange={e=>setForm({...form, email:e.target.value})}/>
+        <input placeholder="DOB" onChange={e=>setForm({...form, dob:e.target.value})}/>
+        <input placeholder="Nationality" onChange={e=>setForm({...form, nationality:e.target.value})}/>
+        <input placeholder="State" onChange={e=>setForm({...form, state:e.target.value})}/>
+        <input placeholder="City" onChange={e=>setForm({...form, city:e.target.value})}/>
+        <input placeholder="Urban / Rural" onChange={e=>setForm({...form, areaType:e.target.value})}/>
+        <input placeholder="Aadhaar" onChange={e=>setForm({...form, aadhaar:e.target.value})}/>
+        <button onClick={submit}>Register</button>
+      </div>
     </div>
   );
 }
